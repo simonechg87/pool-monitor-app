@@ -1,0 +1,38 @@
+{
+  "name": "pool-monitor-advanced",
+  "version": "1.0.0",
+  "description": "App web moderna per il monitoraggio e manutenzione delle piscine",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx live-server .",
+    "build": "echo 'No build process needed for static app'",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "piscina",
+    "pool",
+    "monitoring",
+    "maintenance",
+    "ph",
+    "chlorine",
+    "chemical",
+    "web-app"
+  ],
+  "author": "Pool Monitor Developer",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "serve": "^14.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tuo-username/pool-monitor-advanced.git"
+  },
+  "homepage": "https://tuo-username.github.io/pool-monitor-advanced/",
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
