@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pool Monitor Advanced</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-info">
+                <h1>Pool Monitor Advanced</h1>
+                <p class="subtitle">Monitoraggio Professionale Piscina 55m³</p>
+            </div>
+            <button class="btn btn--danger" id="eliminaStoricoBtn">
+                Elimina Storico
+            </button>
+        </div>
+
+        <!-- Status Cards -->
+        <div class="status-grid">
+            <div class="status-card ph-card">
+                <h3>pH Attuale</h3>
+                <div class="status-value" id="phValue">7.4</div>
+                <div class="status-indicator" id="phIndicator">Ottimale</div>
+            </div>
+            <div class="status-card cloro-card">
+                <h3>Cloro Libero</h3>
+                <div class="status-value" id="cloroValue">1.2</div>
+                <div class="status-indicator" id="cloroIndicator">Ottimale</div>
+            </div>
+        </div>
+
+        <!-- Form Misurazioni -->
+        <div class="main-card">
+            <h2>Nuova Misurazione</h2>
+            <form id="formMisurazione" class="measurement-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="ph">pH</label>
+                        <input type="number" id="ph" name="ph" step="0.01" min="6" max="8.5" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cloro">Cloro Libero (ppm)</label>
+                        <input type="number" id="cloro" name="cloro" step="0.01" min="0" max="5" required>
+                    </div>
+                </div>
+                
+                <h3>Prodotti Utilizzati Oggi</h3>
+                <div class="products-grid">
+                    <div class="form-group">
+                        <label for="cloroShock">Cloro Shock (g)</label>
+                        <input type="number" id="cloroShock" name="cloroShock" min="0" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="antiAlghe">Anti Alghe (l)</label>
+                        <input type="number" id="antiAlghe" name="antiAlghe" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="cloro4Azioni">Cloro 4 Azioni (pastiglie)</label>
+                        <input type="number" id="cloro4Azioni" name="cloro4Azioni" min="0" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="phMinus">pH Minus (l)</label>
+                        <input type="number" id="phMinus" name="phMinus" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="phPlus">pH Plus (l)</label>
+                        <input type="number" id="phPlus" name="phPlus" min="0" step="0.01">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn--primary">Salva Misurazione</button>
+            </form>
+        </div>
+
+        <!-- Raccomandazioni -->
+        <div class="main-card recommendations">
+            <h2>Raccomandazioni per 55 metri cubi</h2>
+            <div class="recommendations-grid">
+                <div class="recommendation-item">
+                    <h4>Cloro Shock</h4>
+                    <p><strong>550-825 g</strong> (10-15 g/m³)</p>
+                    <small>Per trattamenti d'urto</small>
+                </div>
+                <div class="recommendation-item">
+                    <h4>Anti Alghe</h4>
+                    <p><strong>0.275 l</strong> (5 ml/m³)</p>
+                    <small>Prevenzione settimanale</small>
+                </div>
+                <div class="recommendation-item">
+                    <h4>Cloro 4 Azioni</h4>
+                    <p><strong>2-3 pastiglie</strong></p>
+                    <small>1 ogni 20-25 m³</small>
+                </div>
+                <div class="recommendation-item">
+                    <h4>pH Minus/Plus</h4>
+                    <p><strong>0.11-0.165 l</strong></p>
+                    <small>Per correzione 0.1 pH</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafici -->
+        <div class="charts-section">
+            <div class="main-card">
+                <h3>Andamento pH e Cloro</h3>
+                <div class="chart-container">
+                    <canvas id="combinedChart"></canvas>
+                </div>
+            </div>
+
+            <div class="main-card">
+                <h3>Storico Utilizzo Prodotti Chimici</h3>
+                <div class="chart-container">
+                    <canvas id="maintenanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cronologia -->
+        <div class="main-card">
+            <h2>Cronologia Recente</h2>
+            <div id="cronologia" class="cronologia-container">
+                <!-- Popolato dinamicamente via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
