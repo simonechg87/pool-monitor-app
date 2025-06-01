@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pool Monitor Advanced</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1976d2;
+            --secondary: #388e3c;
+            --danger: #d32f2f;
+            --warning: #f57c00;
+            --success: #43a047;
+            --light: #f5f5f5;
+            --dark: #212121;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), #0d47a1);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1, h2, h3, h4 {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+
+        h1 {
+            color: white;
+            font-size: 1.8rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn--primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn--danger {
+            background: linear-gradient(135deg, #ef4444, var(--danger));
+            color: white;
+        }
+
+        .btn--danger:hover {
+            background: linear-gradient(135deg, var(--danger), #b71c1c);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn--danger:active {
+            transform: translateY(0);
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.good { background-color: var(--success); }
+        .status-indicator.warning { background-color: var(--warning); }
+        .status-indicator.critical { background-color: var(--danger); }
+
+        .recommendations {
+            background: #e8f5e9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .recommendations h3 {
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+
+        .recommendations ul {
+            padding-left: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Pool Monitor Advanced</h1>
+            <button id="eliminaStoricoBtn" class="btn btn--danger">
+                ðŸ—‘ï¸ Elimina Dati Storici
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Card Misurazioni -->
+        <div class="card">
+            <div class="card-header">
+                Registrazione Misurazioni e Prodotti
+            </div>
+            <div class="card-body">
+                <form id="formMisurazione">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ph">pH:</label>
+                            <input type="number" id="ph" name="ph" step="0.1" min="6.0" max="8.5" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cloro">Cloro (ppm):</label>
+                            <input type="number" id="cloro" name="cloro" step="0.1" min="0" max="5" required>
+                        </div>
+                    </div>
+                    
+                    <h3>Prodotti Utilizzati</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cloroShock">Cloro shock (g):</label>
+                            <input type="number" id="cloroShock" name="cloroShock" min="0" step="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="antiAlghe">Anti alghe (l):</label>
+                            <input type="number" id="antiAlghe" name="antiAlghe" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cloro4Azioni">Cloro 4 azioni (pastiglie):</label>
+                            <input type="number" id="cloro4Azioni" name="cloro4Azioni" min="0" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="phMinus">pH Minus (l):</label>
+                            <input type="number" id="phMinus" name="phMinus" min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="phPlus">pH Plus (l):</label>
+                            <input type="number" id="phPlus" name="phPlus" min="0" step="0.01">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn--primary">Salva Dati</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Status Cards -->
+        <div class="card">
+            <div class="card-header">
+                Status Attuale
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div>
+                        <h3>pH: <span id="currentPh">-</span></h3>
+                        <div id="phStatus"></div>
+                    </div>
+                    <div>
+                        <h3>Cloro: <span id="currentCloro">-</span> ppm</h3>
+                        <div id="cloroStatus"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafico pH e Cloro -->
+        <div class="card">
+            <div class="card-header">
+                Andamento pH e Cloro
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="combinedChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafico Manutenzioni -->
+        <div class="card">
+            <div class="card-header">
+                Storico Utilizzo Prodotti
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="maintenanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raccomandazioni -->
+        <div class="card">
+            <div class="card-header">
+                Raccomandazioni per Piscina da 55 mÂ³
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div>
+                        <h4>Cloro Shock</h4>
+                        <p>Dosaggio consigliato: <strong>550-825 g</strong> (10-15 g/mÂ³)</p>
+                    </div>
+                    <div>
+                        <h4>Anti Alghe</h4>
+                        <p>Dosaggio settimanale: <strong>0.275 l</strong> (5 ml/mÂ³)</p>
+                    </div>
+                    <div>
+                        <h4>Cloro 4 Azioni</h4>
+                        <p>2-3 pastiglie/settimana (1 ogni 20-25 mÂ³)</p>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <h4>pH Minus/Plus</h4>
+                        <p>Â±0.11-0.165 l per correzione di 0.1 pH (20-30 ml/10 mÂ³)</p>
+                    </div>
+                </div>
+                <div id="raccomandazioni"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inizializzazione dati
+        let misurazioni = JSON.parse(localStorage.getItem('misurazioniPiscina')) || [];
+        
+        // Costanti per valori di riferimento
+        const VALORI_OTTIMALI = {
+            ph: { min: 7.2, max: 7.6, ideale: 7.4 },
+            cloro: { min: 1.0, max: 1.5, ideale: 1.2 }
+        };
+        
+        const VOLUME_PISCINA = 55; // metri cubi
+
+        // Inizializza dashboard
+        aggiornaStatusCards();
+        aggiornaGrafici();
+
+        // Form submit handler
+        document.getElementById('formMisurazione').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const oggi = new Date().toISOString().split('T')[0];
+            
+            // Crea oggetto misurazione
+            const nuovaMisurazione = {
+                data: oggi,
+                ph: parseFloat(document.getElementById('ph').value),
+                cloro: parseFloat(document.getElementById('cloro').value),
+                prodotti: {
+                    cloroShock: parseInt(document.getElementById('cloroShock').value) || 0, // grammi
+                    antiAlghe: parseFloat(document.getElementById('antiAlghe').value) || 0, // litri
+                    cloro4Azioni: parseInt(document.getElementById('cloro4Azioni').value) || 0, // pastiglie
+                    phMinus: parseFloat(document.getElementById('phMinus').value) || 0, // litri
+                    phPlus: parseFloat(document.getElementById('phPlus').value) || 0 // litri
+                }
+            };
+            
+            // Aggiungi alla lista
+            misurazioni.push(nuovaMisurazione);
+            
+            // Salva in localStorage
+            localStorage.setItem('misurazioniPiscina', JSON.stringify(misurazioni));
+            
+            // Aggiorna interfaccia
+            aggiornaStatusCards();
+            aggiornaGrafici();
+            
+            // Reset form
+            this.reset();
+            
+            alert('Misurazione salvata con successo!');
+        });
+
+        // Gestione pulsante eliminazione storico
+        document.getElementById('eliminaStoricoBtn').addEventListener('click', function() {
+            if (confirm('âš ï¸ ATTENZIONE: Verranno eliminati TUTTI i dati precedenti a oggi. Questa operazione non puÃ² essere annullata. Confermi?')) {
+                const oggi = new Date().toISOString().split('T')[0];
+                misurazioni = misurazioni.filter(m => m.data === oggi);
+                localStorage.setItem('misurazioniPiscina', JSON.stringify(misurazioni));
+                aggiornaStatusCards();
+                aggiornaGrafici();
+                alert('âœ… Dati storici eliminati. Sono state mantenute solo le misurazioni di oggi.');
+            }
+        });
+
+        // Funzioni di aggiornamento interfaccia
+        function aggiornaStatusCards() {
+            if (misurazioni.length > 0) {
+                const ultimaMisurazione = misurazioni[misurazioni.length - 1];
+                
+                // Aggiorna valori
+                document.getElementById('currentPh').textContent = ultimaMisurazione.ph.toFixed(1);
+                document.getElementById('currentCloro').textContent = ultimaMisurazione.cloro.toFixed(1);
+                
+                // Aggiorna status pH
+                let phStatus = '';
+                if (ultimaMisurazione.ph < VALORI_OTTIMALI.ph.min) {
+                    phStatus = `<span class="status-indicator critical"></span> Basso (ideale: ${VALORI_OTTIMALI.ph.ideale})`;
+                } else if (ultimaMisurazione.ph > VALORI_OTTIMALI.ph.max) {
+                    phStatus = `<span class="status-indicator critical"></span> Alto (ideale: ${VALORI_OTTIMALI.ph.ideale})`;
+                } else {
+                    phStatus = `<span class="status-indicator good"></span> Ottimale`;
+                }
+                document.getElementById('phStatus').innerHTML = phStatus;
+                
+                // Aggiorna status cloro
+                let cloroStatus = '';
+                if (ultimaMisurazione.cloro < VALORI_OTTIMALI.cloro.min) {
+                    cloroStatus = `<span class="status-indicator critical"></span> Basso (ideale: ${VALORI_OTTIMALI.cloro.ideale})`;
+                } else if (ultimaMisurazione.cloro > VALORI_OTTIMALI.cloro.max) {
+                    cloroStatus = `<span class="status-indicator warning"></span> Alto (ideale: ${VALORI_OTTIMALI.cloro.ideale})`;
+                } else {
+                    cloroStatus = `<span class="status-indicator good"></span> Ottimale`;
+                }
+                document.getElementById('cloroStatus').innerHTML = cloroStatus;
+            }
+        }
+
+        function aggiornaGrafici() {
+            aggiornaGraficoCombinato();
+            aggiornaGraficoManutenzioni();
+        }
+
+        function aggiornaGraficoCombinato() {
+            const ctx = document.getElementById('combinedChart').getContext('2d');
+            
+            // Organizza i dati per il grafico
+            const dateUniche = [...new Set(misurazioni.map(m => m.data))].sort();
+            const phData = dateUniche.map(data => {
+                const misurazioniGiorno = misurazioni.filter(m => m.data === data);
+                return misurazioniGiorno.length > 0 ? misurazioniGiorno[misurazioniGiorno.length - 1].ph : null;
+            });
+            const cloroData = dateUniche.map(data => {
+                const misurazioniGiorno = misurazioni.filter(m => m.data === data);
+                return misurazioniGiorno.length > 0 ? misurazioniGiorno[misurazioniGiorno.length - 1].cloro : null;
+            });
+            
+            // Distruggi grafico esistente se c'Ã¨
+            if (window.combinedChartInstance) {
+                window.combinedChartInstance.destroy();
+            }
+            
+            // Crea nuovo grafico
+            window.combinedChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dateUniche,
+                    datasets: [
+                        {
+                            label: 'pH',
+                            data: phData,
+                            borderColor: '#1976d2',
+                            backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Cloro (ppm)',
+                            data: cloroData,
+                            borderColor: '#e91e63',
+                            backgroundColor: 'rgba(233, 30, 99, 0.1)',
+                            yAxisID: 'y1',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'pH'
+                            },
+                            suggestedMin: 6.5,
+                            suggestedMax: 8.0
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Cloro (ppm)'
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 3.0,
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+
+        function aggiornaGraficoManutenzioni() {
+            const ctx = document.getElementById('maintenanceChart').getContext('2d');
+            
+            // Organizza i dati per il grafico
+            const dateUniche = [...new Set(misurazioni.map(m => m.data))].sort();
+            
+            // Raccogli dati per ogni tipo di prodotto
+            const cloroShockData = [];
+            const antiAlgheData = [];
+            const cloro4AzioniData = [];
+            const phMinusData = [];
+            const phPlusData = [];
+            
+            dateUniche.forEach(data => {
+                const misurazioniGiorno = misurazioni.filter(m => m.data === data);
+                
+                // Somma i valori dei prodotti per ogni giorno
+                let cloroShockSum = 0;
+                let antiAlgheSum = 0;
+                let cloro4AzioniSum = 0;
+                let phMinusSum = 0;
+                let phPlusSum = 0;
+                
+                misurazioniGiorno.forEach(m => {
+                    if (m.prodotti) {
+                        cloroShockSum += m.prodotti.cloroShock || 0;
+                        antiAlgheSum += m.prodotti.antiAlghe || 0;
+                        cloro4AzioniSum += m.prodotti.cloro4Azioni || 0;
+                        phMinusSum += m.prodotti.phMinus || 0;
+                        phPlusSum += m.prodotti.phPlus || 0;
+                    }
+                });
+                
+                cloroShockData.push(cloroShockSum);
+                antiAlgheData.push(antiAlgheSum);
+                cloro4AzioniData.push(cloro4AzioniSum);
+                phMinusData.push(phMinusSum);
+                phPlusData.push(phPlusSum);
+            });
+            
+            // Distruggi grafico esistente se c'Ã¨
+            if (window.maintenanceChartInstance) {
+                window.maintenanceChartInstance.destroy();
+            }
+            
+            // Crea nuovo grafico
+            window.maintenanceChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dateUniche,
+                    datasets: [
+                        {
+                            label: 'Cloro Shock (g)',
+                            data: cloroShockData,
+                            backgroundColor: 'rgba(255, 87, 34, 0.7)'
+                        },
+                        {
+                            label: 'Anti Alghe (l)',
+                            data: antiAlgheData,
+                            backgroundColor: 'rgba(76, 175, 80, 0.7)'
+                        },
+                        {
+                            label: 'Cloro 4 Azioni (pastiglie)',
+                            data: cloro4AzioniData,
+                            backgroundColor: 'rgba(33, 150, 243, 0.7)'
+                        },
+                        {
+                            label: 'pH Minus (l)',
+                            data: phMinusData,
+                            backgroundColor: 'rgba(233, 30, 99, 0.7)'
+                        },
+                        {
+                            label: 'pH Plus (l)',
+                            data: phPlusData,
+                            backgroundColor: 'rgba(156, 39, 176, 0.7)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            stacked: true,
+                        },
+                        y: {
+                            stacked: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
